@@ -14,12 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.calcite.test;
+package org.apache.calcite.sql.parser;
 
-import org.apache.calcite.sql.parser.SqlAbstractParserImpl;
-import org.apache.calcite.sql.parser.SqlParserImplFactory;
-import org.apache.calcite.sql.parser.SqlParserTest;
 import org.apache.calcite.sql.parser.babel.SqlBabelParserImpl;
+import org.apache.calcite.sql.validate.SqlConformanceEnum;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -45,6 +43,27 @@ public class BabelParserTest extends SqlParserTest {
 
   @Test public void testReservedWords() {
     assertThat(isReserved("escape"), is(false));
+  }
+
+  @Test public void testMinusIsReserved() {
+    sql("select ^minus^ from t")
+        .fails("(?s).*Encountered \"minus from\" at .*");
+    sql("select ^minus^ select")
+        .fails("(?s).*Encountered \"minus select <EOF>\" at .*");
+    sql("select * from t ^as^ minus where x < y")
+        .fails("(?s).*Encountered \"as minus\" at .*");
+  }
+
+  @Override public void testOuterApplyFunctionFails() {
+    // It doesn't fail for Babel parser
+  }
+
+  public void testOuterApplyFunction() {
+    conformance = SqlConformanceEnum.BABEL;
+    final String sql = "select * from dept outer apply ramp(deptno)";
+    sql(sql).ok("SELECT *\n"
+        + "FROM `DEPT`\n"
+        + "LEFT JOIN TABLE(`RAMP`(`DEPTNO`)) ON TRUE");
   }
 
   /** {@inheritDoc}
@@ -138,6 +157,15 @@ public class BabelParserTest extends SqlParserTest {
     final String expected = "SELECT `DESC`\n"
         + "FROM `T`\n"
         + "ORDER BY `DESC`, `DESC` DESC";
+    sql(sql).ok(expected);
+  }
+
+  /** Support parsing table functions. */
+  @Test public void testTableFunction() {
+    final String sql = "select *\n"
+        + "from generate_series(1, 5)";
+    final String expected = "SELECT *\n"
+        + "FROM TABLE(GENERATE_SERIES(1, 5))";
     sql(sql).ok(expected);
   }
 }

@@ -403,6 +403,7 @@ data: {
       "parserImpls.ftl"
     ]
 
+    allowSelectingTableFunctions: false
     includeCompoundIdentifier: true
     includeBraces: true
     includeAdditionalDeclarations: false

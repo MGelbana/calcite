@@ -858,6 +858,7 @@ data: {
         "parserImpls.ftl"
       ]
 
+      allowSelectingTableFunctions: true
       includeCompoundIdentifier: true
       includeBraces: true
       includeAdditionalDeclarations: false
